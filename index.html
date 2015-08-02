@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>DingRoll Reslacker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
+    <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="flexrow small-bar">
+      <button type="button" id="import">Import JSON</button>
+      <button type="button" id="export">Export JSON</button>
+    </div>
+    <div class="flexrow bar">
+      <button type="button" id="showdays">Pick a day</button>
+    </div>
+    <div class="region" hidden id="days">
+    </div>
+    <div class="flexrow bar">
+      <input id="tags">
+    </div>
+    <div class="region" id="messages">
+    </div>
+    <div class="flexrow bar">
+      <button type="button" id="save">Save intermediate day progress</button>
+      <button type="button" id="another">I like this day. ANOTHER!</button>
+    </div>
+    <script src="vendor/cre.js"></script>
+    <script src="reslacker.js"></script>
+  </body>
+</html>

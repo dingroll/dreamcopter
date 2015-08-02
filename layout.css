@@ -1,0 +1,30 @@
+html {
+  height: 100%
+}
+body {
+  min-height: 100%;
+  display: flex;
+  flex-flow: column;
+}
+.flexrow {
+  display: flex;
+  flex-flow: row;
+}
+.flexrow > * {
+  flex: 1;
+}
+.bar {
+  flex: none;
+  height: 48px;
+}
+.bar input {
+  font-size: 40px;
+}
+.small-bar {
+  flex: none;
+  height: 24px;
+}
+.region {
+  flex: 1;
+  overflow-y: scroll;
+}

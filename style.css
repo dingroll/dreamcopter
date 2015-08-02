@@ -1,0 +1,11 @@
+button, .button {
+  border: none;
+  border-radius: 4px;
+  margin: 2px;
+}
+#save {
+  background: #dd8;
+}
+#another {
+  background: #8e8;
+}
