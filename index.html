@@ -9,14 +9,14 @@
   </head>
   <body>
     <div class="flexrow small-bar">
-      <button type="button" id="import">Import JSON</button>
+      <label class="button" id="import">Import JSON<input type="file" id="import-file" hidden></label>
       <button type="button" id="export">Export JSON</button>
     </div>
     <div class="flexrow bar">
       <button type="button" id="showdays">Pick a day</button>
     </div>
-    <div class="region" hidden id="days">
-    </div>
+    <ul class="region" hidden id="days">
+    </ul>
     <div class="flexrow bar">
       <input id="tags">
     </div>
