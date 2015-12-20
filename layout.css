@@ -25,20 +25,27 @@ body {
   height: 24px;
 }
 .region {
-  flex: 1;
+  flex: 1 1 100px;
   overflow-y: scroll;
 }
 .slack-message {
   display: flex;
   flex-flow: column;
   border: 1px solid gray;
-  margin: 2px 4px;
+  margin: 4px;
+  padding: 4px;
 }
 .dingroll-message {
   display: flex;
   flex-flow: column;
   border: 1px solid gray;
-  margin: 2px 4px;
+  margin: 2px 0;
+}
+.new-dingroll-message {
+  display: flex;
+  flex-flow: row;
+  border: 1px solid gray;
+  margin: 2px 0;
 }
 .tag-line {
   display: flex;

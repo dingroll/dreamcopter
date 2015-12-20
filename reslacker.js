@@ -47,7 +47,7 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 
     // new messages get inserted here
 
-    cre('div', {part: 'new-dingroll-message'}, [
+    cre('div.new-dingroll-message', {part: 'new-dingroll-message'}, [
       cre('select', {part: 'new-dingroll-message-group'}),
       cre('button', {type: 'button', part: 'add-dingroll-message'},
         'Add DingRoll message')
@@ -84,6 +84,8 @@ function createDingrollMessageElement(dingrollMessage) {
   root.getPart('apply-tags').addEventListener('click', function() {
     messageTagsBar.value = topTagsBar.value;
   });
+  root.getPart('message-body').value = dingrollMessage.body;
+  messageTagsBar.value = dingrollMessage.tags.join(' ');
   return root;
 }
 
