@@ -166,13 +166,13 @@ function openNextNonReadyDay() {
 
   // advance as long as the next day is ready
   do {
-    nextDayIndex = nextDayIndex + 1 % dayCount;
+    nextDayIndex = (nextDayIndex + 1) % dayCount;
     status = reslackStatusesByChannelDate &&
       reslackStatusesByChannelDate.get(slackDump.channelDates[nextDayIndex]);
   } while (nextDayIndex != start && status && status.ready);
 
   // if all days are found to be ready, just go to the next one
-  if (nextDayIndex == start) nextDayIndex = nextDayIndex + 1 % dayCount;
+  if (nextDayIndex == start) nextDayIndex = (nextDayIndex + 1) % dayCount;
 
   openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
 }
@@ -184,19 +184,16 @@ function saveAndReadyAnother() {
 function initSlack(archive) {
   slackDump = archive;
   if (migrationProfile) migrationProfile.loadSlackArchive(archive);
-  for (var i = 0; i < archive.channels.length; i++) {
-    var channel = archive.channels[i];
-    var days = archive.messageDaysByChannelName.get(channel.name);
-    for (var j = 0; j < days.length; j++) {
-      console.log('Creating list item for '+ channel.name + ' '+ days[j].date);
-      elDaysList.appendChild(createDayListItem(channel.name, days[j].date));
-    }
+  var channelDates = archive.channelDates;
+  for (var i = 0; i < channelDates.length; i++) {
+    elDaysList.appendChild(
+      createDayListItem.apply(null, channelDates[i].split('/')));
   }
   // HACK: We open the *first* non-ready day by pretending we're at the last
   // day, then wrapping around.
-  currentSlackChannel = slackDump.channels[slackDump.channels.length-1].name;
-  var lastDays = slackDump.messageDaysByChannelName.get(currentSlackChannel);
-  currentSlackDate = lastDays[lastDays.length-1].date;
+  var lastDay = channelDates[channelDates.length-1].split('/');
+  currentSlackChannel = lastDay[0];
+  currentSlackDate = lastDay[1];
   openNextNonReadyDay();
 }
 
