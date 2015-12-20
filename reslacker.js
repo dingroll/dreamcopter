@@ -1,4 +1,4 @@
-/* global URL fetch yaml cre reslackedDb slackArchive reslackPlan */
+/* global URL jsyaml cre reslackedDb slackArchive reslackPlan */
 
 var elDaysList = document.getElementById('days');
 var topTagsBar = document.getElementById('tags');
@@ -68,6 +68,7 @@ function createDayListItem(channel, date) {
   }
   li.addEventListener('click', openDay.bind(null, channel, date));
   dayListItemsByChannelDate.set(channelDate, li);
+  return li;
 }
 
 function createDingrollMessageElement(dingrollMessage) {
@@ -83,6 +84,7 @@ function createDingrollMessageElement(dingrollMessage) {
   root.getPart('apply-tags').addEventListener('click', function() {
     messageTagsBar.value = topTagsBar.value;
   });
+  return root;
 }
 
 function createSlackMessageElement(slackMessage) {
@@ -98,6 +100,7 @@ function createSlackMessageElement(slackMessage) {
       createDingrollMessageElement(dingrollMessages[i]),
       lastMessage);
   }
+  return root;
 }
 
 function dingrollMessageFromElement(root) {
@@ -184,14 +187,15 @@ function initSlack(archive) {
   for (var i = 0; i < archive.channels.length; i++) {
     var channel = archive.channels[i];
     var days = archive.messageDaysByChannelName.get(channel.name);
-    for (var j = 0; j < days.length; i++) {
+    for (var j = 0; j < days.length; j++) {
+      console.log('Creating list item for '+ channel.name + ' '+ days[j].date);
       elDaysList.appendChild(createDayListItem(channel.name, days[j].date));
     }
   }
   // HACK: We open the *first* non-ready day by pretending we're at the last
   // day, then wrapping around.
   currentSlackChannel = slackDump.channels[slackDump.channels.length-1].name;
-  var lastDays = slackDump.messageDaysByChannelName(currentSlackChannel);
+  var lastDays = slackDump.messageDaysByChannelName.get(currentSlackChannel);
   currentSlackDate = lastDays[lastDays.length-1].date;
   openNextNonReadyDay();
 }
@@ -225,7 +229,7 @@ showDaysButton.addEventListener('click',
   toggleVisibility.bind(null, elDaysList));
 
 function loadMigrationPlan(planYaml) {
-  migrationProfile = reslackPlan(yaml.safeLoad(planYaml));
+  migrationProfile = reslackPlan(jsyaml.safeLoad(planYaml));
   if (slackDump) migrationProfile.loadSlackArchive(slackDump);
   // TODO: reload stuff to reflect changes to plan
 }
@@ -238,7 +242,8 @@ setGroupsButton.addEventListener('click', function setGroups() {
       loadMigrationPlan(migrationProfileTextArea.value);
       migrationProfileTextArea.hidden = true;
     } catch (err) {
-      // TODO: handle invalid YAML somehow
+      // TODO: handle invalid YAML better
+      console.error(err);
     }
   }
 });
