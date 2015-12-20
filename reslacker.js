@@ -1,139 +1,254 @@
-/* global URL fetch cre */
+/* global URL fetch yaml cre reslackedDb slackArchive reslackPlan */
 
-// v4 UUID generator, adapted from https://gist.github.com/LeverOne/1308368
-function uuid() {
-  var a = 0;
-  var b = '';
-  while(a++<36)
-    b+=a*51&52?(a!=15?8^Math.random()*(a!=20?16:4):4).toString(16):'-';
-  return b;
+var elDaysList = document.getElementById('days');
+var topTagsBar = document.getElementById('tags');
+
+var currentSlackChannel;
+var currentSlackDate;
+
+var currentDayReslacked;
+
+var reslackStatusesByChannelDate;
+var slackDump;
+
+var teDayListItem = cre('li.day-item');
+var dayListItemsByChannelDate = new Map();
+
+var teDingrollMessage = cre('.dingroll-message', {wall: true}, [
+  cre('.tag-line',[
+    cre('select', {part: 'group-select'}),
+    cre('button', {type: 'button', part: 'delete-message'}, '(Delete)'),
+    cre('button', {type: 'button', part: 'grab-tags'}, '^-Grab-'),
+    cre('input', {type: 'text', part: 'message-tags',
+      pattern: "[ a-zA-Z0-9_-]*"}),
+    cre('button', {type: 'button', part: 'apply-tags'}, "<-Apply-'")
+  ]),
+  cre('textarea', {part: 'message-body'})
+]);
+
+var teSlackMessage = cre('.slack-message', {wall: true}, [
+  cre('div', {part: 'source-area'}, [
+    cre('div', {part: 'description-line'}, [
+      cre('span', {part: 'username'}),
+      cre('span', {part: 'timestamp'}),
+      cre('button', {type: 'button', part: 'show-source'}, 'Show original'),
+    ]),
+    cre('div', {part: 'source-details', hidden: true}, [
+      cre('p', {part: 'original-message'}),
+      // This textarea holds extra JSON to accompany this Slack message's
+      // migrated DingRoll stuff, to address long-tail tweaks like "make the
+      // second message an hour later" or "change this to come from another
+      // user". These tweaks will be invented ad-hoc as necessary, then
+      // baked into the import process that handles these migrations.
+      cre('textarea', {part: 'source-override'})
+    ])
+  ]),
+  cre('div', {part: 'dingroll-messages'}, [
+
+    // new messages get inserted here
+
+    cre('div', {part: 'new-dingroll-message'}, [
+      cre('select', {part: 'new-dingroll-message-group'}),
+      cre('button', {type: 'button', part: 'add-dingroll-message'},
+        'Add DingRoll message')
+    ])
+  ])
+]);
+
+var migrationProfile; // aka reslackPlan
+
+function createDayListItem(channel, date) {
+  var channelDate = channel + '/' + date;
+  var li = cre(teDayListItem, {textContent: channel + ' ' + date});
+  var dayStatus = reslackStatusesByChannelDate &&
+    reslackStatusesByChannelDate.get(channelDate);
+  if (dayStatus) {
+    if (dayStatus.ready) li.classList.add('ready');
+    else li.classList.add('partial');
+  }
+  li.addEventListener('click', openDay.bind(null, channel, date));
+  dayListItemsByChannelDate.set(channelDate, li);
 }
 
-var daysList = document.getElementById('days');
-
-var content;
-
-var currentSlackChannelIndex;
-var currentSlackDayIndex;
-var currentDay;
-
-function createDingrollVersionOfMessage(slackMessage) {
-  return slackMessage.replace(/<([^>]+)>/, function(match, inside) {
-    if (inside.slice(0, 1) == '#') {
-      return content.dingroll.channels[inside.slice(1)].name;
-    } else if (inside.slice(0,1) == '@' && inside.indexOf('|') > -1) {
-      return content.dingroll.users[inside.slice(1, inside.indexOf('|'))].name;
-    } else return match;
+function createDingrollMessageElement(dingrollMessage) {
+  var root = cre(teDingrollMessage);
+  // TODO: populate group select
+  root.getPart('delete-message').addEventListener('click', function() {
+    root.remove();
+  });
+  var messageTagsBar = root.getPart('message-tags');
+  root.getPart('grab-tags').addEventListener('click', function() {
+    topTagsBar.value = messageTagsBar.value;
+  });
+  root.getPart('apply-tags').addEventListener('click', function() {
+    messageTagsBar.value = topTagsBar.value;
   });
 }
 
-function createCurrentDayMessages() {
-  var slackChannel = content.slack.channels[currentSlackChannelIndex];
-  var slackChannelId = slackChannel.id;
-  var slackDayDate = slackChannel.days[currentSlackDayIndex];
+function createSlackMessageElement(slackMessage) {
+  var root = cre(teSlackMessage);
+  root.getPart('username').textContent = slackMessage.username;
+  // TODO: hook up "Show original"
+  var lastMessage = root.getPart('new-dingroll-message');
+  // TODO: hook up additional message creator
+  var dingrollMessageContainer = root.getPart('dingroll-messages');
+  var dingrollMessages = slackMessage.dingrollMessages;
+  for (var i = 0; i < dingrollMessages.length; i++) {
+    dingrollMessageContainer.insertBefore(
+      createDingrollMessageElement(dingrollMessages[i]),
+      lastMessage);
+  }
 }
 
-var dayListItem = cre('li.day-item');
-function createDayListItem(channel, day) {
-  var slackChannel = content.slack.channels[channel];
-  var slackDay = slackChannel.days[day];
-  var dayDate = slackDay.date;
-  var dingrollChannel = content.dingroll.channels[slackChannel.id];
-  var dingrollDay = dingrollChannel[dayDate];
-  var li = cre(dayListItem,
-    {textContent: dingrollChannel.name + ' ' + dayDate});
-  if (dingrollDay) {
-    if (dingrollDay.ready) li.classList.add('ready');
-    else li.classList.add('partial');
+function dingrollMessageFromElement(root) {
+  return {
+    group: root.getPart('group-select').value.textContent,
+    body: root.getPart('message-body').value,
+    tags: root.getPart('message-tags').value.split(/\s+/g)
+  };
+}
+
+function updateDayDocMessages() {
+  var slackMessageElements =
+    elMessageContainer.getElementsByClassName('slack-message');
+  for (var i = 0; i < slackMessageElements.length; i++) {
+    var newDingrollMessages = [];
+    var dingrollMessageElements =
+      slackMessageElements[i].getElementsByClassName('dingroll-message');
+    for (var j = 0; j < dingrollMessageElements.length; j++) {
+      newDingrollMessages[j] =
+        dingrollMessageFromElement(dingrollMessageElements[j]);
+    }
+    currentDayReslacked.messages[i].dingrollMessages = newDingrollMessages;
   }
+}
+
+function removeChildren(element) {
+  while (element.lastChild) {
+    element.removeChild(element.lastChild);
+  }
+}
+
+var elMessageContainer = document.getElementById('messages');
+
+// Populates elements for named channel and date.
+function openDay(channel, date) {
+  removeChildren(elMessageContainer);
+  // Get any existing document for the new day
+  // or create an initial document if there isn't any for today
+  reslackedDb.getChannelDayMessages(channel + '/' + date)
+    .then(function(doc){
+      currentDayReslacked = migrationProfile.freshDayDoc(channel, date, doc);
+      var slackMessages = currentDayReslacked.messages;
+      for (var i = 0; i < slackMessages.length; i++) {
+        elMessageContainer.appendChild(
+          createSlackMessageElement(slackMessages[i]));
+      }
+    });
 }
 
 function saveCurrentDay() {
-
+  updateDayDocMessages();
+  return reslackedDb.saveDay(
+    currentSlackChannel + '/' + currentSlackDate,
+    currentDayReslacked);
 }
 
-function readyAnother() {
+function openNextNonReadyDay() {
+  var dayCount = slackDump.channelDates.length;
+  var start = slackDump.channelDates.indexOf(
+    currentSlackChannel + '/' + currentSlackDate);
+  var nextDayIndex = start;
+  var status;
 
-  saveCurrentDay();
+  // advance as long as the next day is ready
+  do {
+    nextDayIndex = nextDayIndex + 1 % dayCount;
+    status = reslackStatusesByChannelDate &&
+      reslackStatusesByChannelDate.get(slackDump.channelDates[nextDayIndex]);
+  } while (nextDayIndex != start && status && status.ready);
+
+  // if all days are found to be ready, just go to the next one
+  if (nextDayIndex == start) nextDayIndex = nextDayIndex + 1 % dayCount;
+
+  openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
 }
 
-function initElements() {
-
+function saveAndReadyAnother() {
+  return saveCurrentDay().then(openNextNonReadyDay);
 }
 
-function importSlackDump(slackDump) {
-  // TODO: integrate updates from new Slack dumps
-  if (localStorage.getItem('savedStateJson')) {
-    return alert("Not importing Slack dump since you have a currently saved " +
-      "state. If you wish to import this dump, you must first clear your " +
-      "state in the console with " +
-      "localStorage.setItem('savedStateJson', null).");
+function initSlack(archive) {
+  slackDump = archive;
+  if (migrationProfile) migrationProfile.loadSlackArchive(archive);
+  for (var i = 0; i < archive.channels.length; i++) {
+    var channel = archive.channels[i];
+    var days = archive.messageDaysByChannelName.get(channel.name);
+    for (var j = 0; j < days.length; i++) {
+      elDaysList.appendChild(createDayListItem(channel.name, days[j].date));
+    }
   }
-  content = {slack: slackDump};
-
-  var dingrollItems = {users: {}, channels: {}};
-  content.dingroll = dingrollItems;
-
-  for (var i = 0; i < slackDump.users.length; i++) {
-    var user = slackDump.users[i];
-    dingrollItems.users[user.id] = dingrollItems.users[user.id] || {
-      id: uuid(),
-      name: user.name
-    };
-  }
-  for (var i = 0; i < slackDump.channels.length; i++) {
-    var channel = slackDump.channels[i];
-    dingrollItems.channels[channel.id] =
-      dingrollItems.channels[channel.id] || {
-        name: channel.name,
-        dayMessages: {}
-      };
-  }
-  initElements();
+  // HACK: We open the *first* non-ready day by pretending we're at the last
+  // day, then wrapping around.
+  currentSlackChannel = slackDump.channels[slackDump.channels.length-1].name;
+  var lastDays = slackDump.messageDaysByChannelName(currentSlackChannel);
+  currentSlackDate = lastDays[lastDays.length-1].date;
+  openNextNonReadyDay();
 }
 
-function importJson(file) {
-  file = URL.toBlobUrl(file);
+function importSlackZip(file) {
+  // see http://crbug.com/571286
+  //file = URL.createObjectURL(file);
 
   fetch(file).then(function (body) {
-    return body.text();
-  }).then(function(text){
-    try {
-      var importedContent = JSON.parse(text);
-    } catch (err) {
-      return alert('Invalid JSON: ' + err.message);
-    }
-
-    if (importedContent.dingroll) {
-      content = importedContent;
-    } else if (importedContent.channels) {
-      importSlackDump(importedContent);
-    } else {
-      return alert('Unrecognized JSON (no "dingroll" or "channels").');
-    }
+    return body.blob();
+  }).then(function(blob){
+    initSlack(slackArchive(blob));
   });
-
 }
 
 var importInput = document.getElementById('import-file');
 
 importInput.addEventListener('change', function () {
   var file = importInput.files[0];
-  if (file) importJson(file);
+  if (file) importSlackZip(file);
 });
 
-var savedJson = localStorage.getItem('savedStateJson');
-
-if (savedJson) {
-  content = JSON.parse(savedJson);
-}
-
 var showDaysButton = document.getElementById('showdays');
+var setGroupsButton = document.getElementById('set-groups');
+var migrationProfileTextArea = document.getElementById('migration');
 var saveButton = document.getElementById('save');
 var anotherButton = document.getElementById('another');
 
-showDaysButton.addEventListener('click', function () {
-  daysList.hidden=!daysList.hidden;
+function toggleVisibility(element) {
+  element.hidden = !element.hidden;
+}
+
+showDaysButton.addEventListener('click',
+  toggleVisibility.bind(null, elDaysList));
+
+function loadMigrationPlan(planYaml) {
+  migrationProfile = reslackPlan(yaml.safeLoad(planYaml));
+  if (slackDump) migrationProfile.loadSlackArchive(slackDump);
+  // TODO: reload stuff to reflect changes to plan
+}
+
+setGroupsButton.addEventListener('click', function setGroups() {
+  if (migrationProfileTextArea.hidden) {
+    migrationProfileTextArea.hidden = false;
+  } else {
+    try {
+      loadMigrationPlan(migrationProfileTextArea.value);
+      migrationProfileTextArea.hidden = true;
+    } catch (err) {
+      // TODO: handle invalid YAML somehow
+    }
+  }
 });
+
+// TODO: load ready statuses
+// TODOL update ready statuses in UI on retrieval
+// TODO: update ready statuses in UI on save
+
 saveButton.addEventListener('click', saveCurrentDay);
-anotherButton.addEventListener('click', readyAnother);
+anotherButton.addEventListener('click', saveAndReadyAnother);

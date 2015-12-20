@@ -28,3 +28,19 @@ body {
   flex: 1;
   overflow-y: scroll;
 }
+.slack-message {
+  display: flex;
+  flex-flow: column;
+  border: 1px solid gray;
+  margin: 2px 4px;
+}
+.dingroll-message {
+  display: flex;
+  flex-flow: column;
+  border: 1px solid gray;
+  margin: 2px 4px;
+}
+.tag-line {
+  display: flex;
+  flex-flow: row;
+}
