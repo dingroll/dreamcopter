@@ -149,6 +149,7 @@ function openDay(channel, date) {
         elMessageContainer.appendChild(
           createSlackMessageElement(slackMessages[i]));
       }
+      // TODO: pre-fill top tag bar?
     });
 }
 
