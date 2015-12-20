@@ -197,14 +197,11 @@ function initSlack(archive) {
 }
 
 function importSlackZip(file) {
-  // see http://crbug.com/571286
-  //file = URL.createObjectURL(file);
-
-  fetch(file).then(function (body) {
-    return body.blob();
-  }).then(function(blob){
-    initSlack(slackArchive(blob));
-  });
+  var fileReader = new FileReader();
+  fileReader.onload = function() {
+    initSlack(slackArchive(this.result));
+  };
+  fileReader.readAsArrayBuffer(file);
 }
 
 var importInput = document.getElementById('import-file');
