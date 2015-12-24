@@ -239,7 +239,12 @@ setGroupsButton.addEventListener('click', function setGroups() {
     migrationProfileTextArea.hidden = false;
   } else {
     try {
-      loadMigrationPlan(migrationProfileTextArea.value);
+      reslackYaml = migrationProfileTextArea.value;
+      // load the plan
+      loadMigrationPlan(reslackYaml);
+      // save the plan for future visits
+      localStorage.setItem('reslackPlan', reslackYaml);
+      // hide the plan edit region
       migrationProfileTextArea.hidden = true;
     } catch (err) {
       // TODO: handle invalid YAML better
@@ -247,6 +252,12 @@ setGroupsButton.addEventListener('click', function setGroups() {
     }
   }
 });
+
+var reslackYaml = localStorage.getItem('reslackPlan');
+if (reslackYaml) {
+  migrationProfileTextArea.value = reslackYaml;
+  loadMigrationPlan(reslackYaml);
+}
 
 // TODO: load ready statuses
 // TODOL update ready statuses in UI on retrieval
