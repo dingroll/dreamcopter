@@ -214,7 +214,7 @@ function openDay(channel, date) {
 
 function saveCurrentDay() {
   updateDayDocMessages();
-  return reslackedDb.saveDay(
+  return reslackedDb.saveChannelDay(
     currentSlackChannel + '/' + currentSlackDate,
     currentDayReslacked);
 }
