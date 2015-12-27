@@ -15,3 +15,12 @@ button, .button {
 #another {
   background: #8e8;
 }
+.day-item {
+  cursor: pointer;
+}
+.day-item.partial {
+  background: #ee9;
+}
+.day-item.ready {
+  background: #9f9;
+}

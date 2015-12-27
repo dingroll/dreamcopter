@@ -318,8 +318,10 @@ if (reslackYaml) {
   loadMigrationPlan(reslackYaml);
 }
 
-// TODO: load ready statuses
-// TODOL update ready statuses in UI on retrieval
+reslackedDb.getChannelDayStatusMap().then(function(statusMap){
+  // TODO: update ready statuses in UI if zip has already been loaded
+  reslackStatusesByChannelDate = statusMap;
+});
 // TODO: update ready statuses in UI on save
 
 saveButton.addEventListener('click', saveCurrentDay);
