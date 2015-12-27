@@ -200,7 +200,7 @@ function openDay(channel, date) {
   removeChildren(elMessageContainer);
   // Get any existing document for the new day
   // or create an initial document if there isn't any for today
-  reslackedDb.getChannelDayMessages(channel + '/' + date)
+  reslackedDb.getChannelDay(channel + '/' + date)
     .then(function(doc){
       currentDayReslacked = migrationProfile.freshDayDoc(channel, date, doc);
       var slackMessages = currentDayReslacked.messages;
@@ -240,6 +240,7 @@ function openNextNonReadyDay() {
 }
 
 function saveAndReadyAnother() {
+  currentDayReslacked.ready = true;
   return saveCurrentDay().then(openNextNonReadyDay);
 }
 
