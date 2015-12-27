@@ -30,8 +30,8 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
   cre('div', {part: 'source-area'}, [
     cre('div', {part: 'description-line'}, [
       cre('span', {part: 'username'}),
-      cre('span', {part: 'timestamp'}),
       cre('button', {type: 'button', part: 'show-source'}, 'Show original'),
+      cre('span', {part: 'timestamp'})
     ]),
     cre('div', {part: 'source-details', hidden: true}, [
       cre('p', {part: 'original-message'}),
@@ -124,7 +124,6 @@ function createSlackMessageElement(slackMessage) {
   var lastMessage = root.getPart('new-dingroll-message');
   var newGroup = root.getPart('new-dingroll-message-group');
   populateSelect(newGroup);
-  // TODO: hook up additional message creator
   var dingrollMessageContainer = root.getPart('dingroll-messages');
   var dingrollMessages = slackMessage.dingrollMessages;
   var dingrollMessageElements = [];
@@ -133,6 +132,7 @@ function createSlackMessageElement(slackMessage) {
       createDingrollMessageElement(dingrollMessages[i]);
   }
   setNewGroupSelection(dingrollMessageElements, newGroup);
+  // TODO: hook up additional message creator
   dingrollMessageContainer.insertBefore(
     cre(dingrollMessageElements), lastMessage);
   return root;
