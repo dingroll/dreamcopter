@@ -117,30 +117,53 @@ function setNewGroupSelection(dingrollMessageEls, newGroup) {
   newGroup.selectedIndex = newGroupIndex;
 }
 
+// TODO: make this less grody and necessary
+function getDingrollBodyForSlackTs(slackTs) {
+  var originalSlackMessages = slackDump.getMessagesForChannelDate(
+    currentSlackChannel + '/' + currentSlackDate);
+  var originalMessage = originalSlackMessages.find(function(message) {
+    return message.ts == slackTs;
+  });
+  return migrationProfile.slackMessageToDingroll(originalMessage.text);
+}
+
 function createSlackMessageElement(slackMessage) {
   var root = cre(teSlackMessage);
   root.getPart('username').textContent = slackMessage.username;
   // TODO: hook up "Show original"
   var lastMessage = root.getPart('new-dingroll-message');
-  var newGroup = root.getPart('new-dingroll-message-group');
-  populateSelect(newGroup);
   var dingrollMessageContainer = root.getPart('dingroll-messages');
   var dingrollMessages = slackMessage.dingrollMessages;
-  var dingrollMessageElements = [];
+  var initialDingrollMessageElements = [];
   for (var i = 0; i < dingrollMessages.length; i++) {
-    dingrollMessageElements[i] =
+    initialDingrollMessageElements[i] =
       createDingrollMessageElement(dingrollMessages[i]);
   }
-  setNewGroupSelection(dingrollMessageElements, newGroup);
-  // TODO: hook up additional message creator
   dingrollMessageContainer.insertBefore(
-    cre(dingrollMessageElements), lastMessage);
+    cre(initialDingrollMessageElements), lastMessage);
+  var newGroup = root.getPart('new-dingroll-message-group');
+  populateSelect(newGroup);
+  setNewGroupSelection(initialDingrollMessageElements, newGroup);
+  function createAdditionalMessage () {
+    var newGroupName = newGroup.value;
+    dingrollMessageContainer.insertBefore(createDingrollMessageElement({
+      group: newGroupName,
+      body: getDingrollBodyForSlackTs(slackMessage.slackTs),
+      tags: migrationProfile.tagsForChannelGroup(
+        currentSlackChannel, newGroupName)
+      }), lastMessage);
+    setNewGroupSelection(
+      dingrollMessageContainer.getElementsByClassName('dingroll-message'),
+      newGroup);
+  }
+  root.getPart('add-dingroll-message').addEventListener('click',
+    createAdditionalMessage);
   return root;
 }
 
 function dingrollMessageFromElement(root) {
   return {
-    group: root.getPart('group-select').value.textContent,
+    group: root.getPart('group-select').value,
     body: root.getPart('message-body').value,
     tags: root.getPart('message-tags').value.split(/\s+/g)
   };
