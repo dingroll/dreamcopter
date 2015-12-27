@@ -71,9 +71,21 @@ function createDayListItem(channel, date) {
   return li;
 }
 
+function populateSelect(select, initial) {
+  var groupNames = migrationProfile.groupsForChannel(currentSlackChannel);
+  for (var i = 0; i < groupNames.length; i++) {
+    select.appendChild(cre('option', groupNames[i]));
+  }
+  if (initial) {
+    select.selectedIndex = groupNames.indexOf(initial);
+  }
+  return select;
+}
+
 function createDingrollMessageElement(dingrollMessage) {
   var root = cre(teDingrollMessage);
-  // TODO: populate group select
+  var groupSelect = root.getPart('group-select');
+  populateSelect(groupSelect, dingrollMessage.group);
   root.getPart('delete-message').addEventListener('click', function() {
     root.remove();
   });
@@ -89,19 +101,40 @@ function createDingrollMessageElement(dingrollMessage) {
   return root;
 }
 
+function setNewGroupSelection(dingrollMessageEls, newGroup) {
+  var newGroupIndex = 0;
+  var groupHasIndex = true;
+  while (newGroupIndex < newGroup.length && groupHasIndex) {
+
+    groupHasIndex = false;
+    for (var j = 0; j < dingrollMessageEls.length && !groupHasIndex; j++) {
+      var messageGroup = dingrollMessageEls[j].getPart('group-select');
+      if (messageGroup.selectedIndex == newGroupIndex) groupHasIndex = true;
+    }
+    if (groupHasIndex) ++newGroupIndex;
+  }
+  if (newGroupIndex == newGroup.length) newGroupIndex = 0;
+  newGroup.selectedIndex = newGroupIndex;
+}
+
 function createSlackMessageElement(slackMessage) {
   var root = cre(teSlackMessage);
   root.getPart('username').textContent = slackMessage.username;
   // TODO: hook up "Show original"
   var lastMessage = root.getPart('new-dingroll-message');
+  var newGroup = root.getPart('new-dingroll-message-group');
+  populateSelect(newGroup);
   // TODO: hook up additional message creator
   var dingrollMessageContainer = root.getPart('dingroll-messages');
   var dingrollMessages = slackMessage.dingrollMessages;
+  var dingrollMessageElements = [];
   for (var i = 0; i < dingrollMessages.length; i++) {
-    dingrollMessageContainer.insertBefore(
-      createDingrollMessageElement(dingrollMessages[i]),
-      lastMessage);
+    dingrollMessageElements[i] =
+      createDingrollMessageElement(dingrollMessages[i]);
   }
+  setNewGroupSelection(dingrollMessageElements, newGroup);
+  dingrollMessageContainer.insertBefore(
+    cre(dingrollMessageElements), lastMessage);
   return root;
 }
 
@@ -138,6 +171,9 @@ var elMessageContainer = document.getElementById('messages');
 
 // Populates elements for named channel and date.
 function openDay(channel, date) {
+  // HACK: state leakage - this gets used in a few places in this file
+  currentSlackChannel = channel;
+  currentSlackDate = date;
   removeChildren(elMessageContainer);
   // Get any existing document for the new day
   // or create an initial document if there isn't any for today
