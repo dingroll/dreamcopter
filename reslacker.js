@@ -6,6 +6,10 @@ var topTagsBar = document.getElementById('tags');
 var currentSlackChannel;
 var currentSlackDate;
 
+// Things that are grody about this file, part 1: no distinction between
+// slack message data from the dump and slack message data in the converted
+// document (even though they're completely different things).
+var currentDaySlackMessagesByTs = new Map();
 var currentDayReslacked;
 
 var reslackStatusesByChannelDate;
@@ -30,12 +34,13 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
   cre('div', {part: 'source-area'}, [
     cre('div', {part: 'description-line'}, [
       cre('span', {part: 'username'}),
+      cre('span', {part: 'subtype'}),
       cre('button', {type: 'button', part: 'show-source'}, 'Show original'),
       cre('span', {part: 'timestamp'})
     ]),
     cre('div', {part: 'source-details', hidden: true}, [
-      cre('p', {part: 'original-message'}),
-      // This textarea holds extra JSON to accompany this Slack message's
+      cre('pre', {part: 'original-message'}),
+      // This textarea holds extra YAML to accompany this Slack message's
       // migrated DingRoll stuff, to address long-tail tweaks like "make the
       // second message an hour later" or "change this to come from another
       // user". These tweaks will be invented ad-hoc as necessary, then
@@ -117,20 +122,35 @@ function setNewGroupSelection(dingrollMessageEls, newGroup) {
   newGroup.selectedIndex = newGroupIndex;
 }
 
-// TODO: make this less grody and necessary
-function getDingrollBodyForSlackTs(slackTs) {
-  var originalSlackMessages = slackDump.getMessagesForChannelDate(
-    currentSlackChannel + '/' + currentSlackDate);
-  var originalMessage = originalSlackMessages.find(function(message) {
-    return message.ts == slackTs;
-  });
-  return migrationProfile.slackMessageToDingroll(originalMessage.text);
+function dateFromSlackTs(ts) {
+  return new Date(parseInt(ts.replace(/\.\d+$/,''),10)*1000);
 }
 
 function createSlackMessageElement(slackMessage) {
+  var originalSlackMessage =
+    currentDaySlackMessagesByTs.get(slackMessage.slackTs);
   var root = cre(teSlackMessage);
   root.getPart('username').textContent = slackMessage.username;
-  // TODO: hook up "Show original"
+  root.getPart('timestamp').textContent =
+    dateFromSlackTs(originalSlackMessage.ts).toISOString()
+      .replace(/T(\d\d:\d\d:\d\d)\.\d\d\dZ$/,' $1');
+  if (originalSlackMessage.subtype) {
+    root.getPart('subtype').textContent = originalSlackMessage.subtype;
+  }
+  var originalSection = root.getPart('source-details');
+  var showOriginalButton = root.getPart('show-source');
+  var originalMessageArea = root.getPart('original-message');
+  showOriginalButton.addEventListener('click', function() {
+    if (originalSection.hidden) {
+      showOriginalButton.textContent = 'Hide original';
+      originalMessageArea.textContent = originalMessageArea.textContent ||
+        JSON.stringify(originalSlackMessage, null, 2);
+      originalSection.hidden = false;
+    } else {
+      showOriginalButton.textContent = 'Show original';
+      originalSection.hidden = true;
+    }
+  });
   var lastMessage = root.getPart('new-dingroll-message');
   var dingrollMessageContainer = root.getPart('dingroll-messages');
   var dingrollMessages = slackMessage.dingrollMessages;
@@ -148,7 +168,8 @@ function createSlackMessageElement(slackMessage) {
     var newGroupName = newGroup.value;
     dingrollMessageContainer.insertBefore(createDingrollMessageElement({
       group: newGroupName,
-      body: getDingrollBodyForSlackTs(slackMessage.slackTs),
+      body: migrationProfile.slackMessageToDingroll(
+        currentDaySlackMessagesByTs.get(slackMessage.slackTs).text),
       tags: migrationProfile.tagsForChannelGroup(
         currentSlackChannel, newGroupName)
       }), lastMessage);
@@ -197,7 +218,19 @@ function openDay(channel, date) {
   // HACK: state leakage - this gets used in a few places in this file
   currentSlackChannel = channel;
   currentSlackDate = date;
+
+  // Get the list of Slack messages directly, for "show original" info
+  var originalMessages = slackDump.getMessagesForChannelDate(
+    channel + '/' + date);
+  currentDaySlackMessagesByTs.clear();
+  for (var i = 0; i < originalMessages.length; i++) {
+    currentDaySlackMessagesByTs.set(
+      originalMessages[i].ts, originalMessages[i]);
+  }
+
+  // Clear the previously-loaded message elements
   removeChildren(elMessageContainer);
+
   // Get any existing document for the new day
   // or create an initial document if there isn't any for today
   reslackedDb.getChannelDay(channel + '/' + date)

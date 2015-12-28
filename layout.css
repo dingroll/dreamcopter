@@ -6,6 +6,9 @@ body {
   display: flex;
   flex-flow: column;
 }
+[hidden] {
+  display: none !important;
+}
 .flexrow {
   display: flex;
   flex-flow: row;
