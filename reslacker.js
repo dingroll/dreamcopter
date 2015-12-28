@@ -168,12 +168,14 @@ function createSlackMessageElement(slackMessage) {
   setNewGroupSelection(initialDingrollMessageElements, newGroup);
   function createAdditionalMessage () {
     var newGroupName = newGroup.value;
+    var tags =  migrationProfile.tagsForChannelGroup(
+      currentSlackChannel, newGroupName);
     dingrollMessageContainer.insertBefore(createDingrollMessageElement({
       group: newGroupName,
       body: migrationProfile.slackMessageToDingroll(
         currentDaySlackMessagesByTs.get(slackMessage.slackTs).text),
-      tags: migrationProfile.tagsForChannelGroup(
-        currentSlackChannel, newGroupName)
+      tags: tags,
+      filterLength: tags.length
       }), lastMessage);
     setNewGroupSelection(
       dingrollMessageContainer.getElementsByClassName('dingroll-message'),
