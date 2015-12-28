@@ -1,3 +1,4 @@
-# dingroll-reslacker
+# DingRoll Enriching And Migrating Chat On Platforms That Exclude Richness
 
-Single-page app for rewriting Slack messages as they would have been posted to DingRoll
+A single-page app for rewriting Slack messages as they would have been posted
+to DingRoll.
