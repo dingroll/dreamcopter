@@ -102,7 +102,10 @@ function createDingrollMessageElement(dingrollMessage) {
     messageTagsBar.value = topTagsBar.value;
   });
   root.getPart('message-body').value = dingrollMessage.body;
-  messageTagsBar.value = dingrollMessage.tags.join(' ');
+  var fl = dingrollMessage.filterLength;
+  messageTagsBar.value =
+    dingrollMessage.tags.slice(0,fl).join(' ') + ' : ' +
+    dingrollMessage.tags.slice(fl).join(' ');
   return root;
 }
 
@@ -183,10 +186,14 @@ function createSlackMessageElement(slackMessage) {
 }
 
 function dingrollMessageFromElement(root) {
+  var tagHalves = root.getPart('message-tags').value.split(':',2);
+  var filterTags = tagHalves[0].trim().split(/\s+/g);
+  var supplementalTags = tagHalves[1].trim().split(/\s+/g);
   return {
     group: root.getPart('group-select').value,
     body: root.getPart('message-body').value,
-    tags: root.getPart('message-tags').value.split(/\s+/g)
+    tags: filterTags.concat(supplementalTags),
+    filterLength: filterTags.length
   };
 }
 
