@@ -61,15 +61,26 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 
 var migrationProfile; // aka reslackPlan
 
+function updateDayListItemStatus(channelDate) {
+  var li = dayListItemsByChannelDate.get(channelDate);
+  var dayStatus = reslackStatusesByChannelDate &&
+    reslackStatusesByChannelDate.get(channelDate);
+  if (dayStatus == 'ready') {
+    li.classList.remove('partial');
+    li.classList.add('ready');
+  }
+  else if (dayStatus == 'incomplete') {
+    li.classList.remove('ready');
+    li.classList.add('partial');
+  }
+}
+
 function createDayListItem(channel, date) {
   var channelDate = channel + '/' + date;
   var li = cre(teDayListItem, {textContent: channel + ' ' + date});
-  var dayStatus = reslackStatusesByChannelDate &&
-    reslackStatusesByChannelDate.get(channelDate);
-  if (dayStatus == 'ready') li.classList.add('ready');
-  else if (dayStatus == 'incomplete') li.classList.add('partial');
-  li.addEventListener('click', openDay.bind(null, channel, date));
   dayListItemsByChannelDate.set(channelDate, li);
+  updateDayListItemStatus(channelDate);
+  li.addEventListener('click', openDay.bind(null, channel, date));
   return li;
 }
 
@@ -252,10 +263,14 @@ function openDay(channel, date) {
 }
 
 function saveCurrentDay() {
+  var savingChannelDate = currentSlackChannel + '/' + currentSlackDate;
+  var savingStatus = currentDayReslacked.status;
   updateDayDocMessages();
-  return reslackedDb.saveChannelDay(
-    currentSlackChannel + '/' + currentSlackDate,
-    currentDayReslacked);
+  return reslackedDb.saveChannelDay(savingChannelDate, currentDayReslacked)
+    .then(function(){
+      reslackStatusesByChannelDate.set(savingChannelDate, savingStatus);
+      updateDayListItemStatus(savingChannelDate);
+    });
 }
 
 function openNextNonReadyDay() {
