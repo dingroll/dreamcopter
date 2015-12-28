@@ -20,16 +20,17 @@ styler.addStyle([['.dingroll-message','#message-tags']],
 styler.addStyle([
   ['.slack-message','#description-line']],
     'margin: 4px 8px 0;');
+
 // style
 
 styler.addStyle([
   ['.slack-message','button']],
     'background: #0bf;');
 styler.addStyle([
+  ['.dingroll-message','button'],
   ['.slack-message','.new-dingroll-message button']],
     'background: #fb2;');
 styler.addStyle([
   ['.slack-message','#username'],
   ['.slack-message','#timestamp']],
     'color: white;');
-

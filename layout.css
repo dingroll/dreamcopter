@@ -45,17 +45,20 @@ pre {
   display: flex;
   flex-flow: column;
   margin: 4px;
+  padding: 4px;
 }
-.dingroll-message > *,
-.new-dingroll-message > * {
+.dingroll-message *,
+.new-dingroll-message * {
   margin: 4px;
 }
 .new-dingroll-message {
   display: flex;
   flex-flow: row;
   margin: 4px;
+  padding: 4px;
 }
 .tag-line {
   display: flex;
   flex-flow: row;
+  margin: 0;
 }

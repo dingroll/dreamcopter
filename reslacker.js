@@ -21,11 +21,11 @@ var dayListItemsByChannelDate = new Map();
 var teDingrollMessage = cre('.dingroll-message', {wall: true}, [
   cre('.tag-line',[
     cre('select', {part: 'group-select'}),
-    cre('button', {type: 'button', part: 'delete-message'}, '(Delete)'),
-    cre('button', {type: 'button', part: 'grab-tags'}, '^-Grab-'),
+    cre('button', {type: 'button', part: 'delete-message'}, '\u274C'),
+    cre('button', {type: 'button', part: 'grab-tags'}, '\u2B11 Grab'),
     cre('input', {type: 'text', part: 'message-tags',
       pattern: "[ a-zA-Z0-9_-]*"}),
-    cre('button', {type: 'button', part: 'apply-tags'}, "<-Apply-'")
+    cre('button', {type: 'button', part: 'apply-tags'}, '\u21B5 Apply')
   ]),
   cre('textarea', {part: 'message-body'})
 ]);
@@ -54,8 +54,7 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 
     cre('div.new-dingroll-message', {part: 'new-dingroll-message'}, [
       cre('select', {part: 'new-dingroll-message-group'}),
-      cre('button', {type: 'button', part: 'add-dingroll-message'},
-        'Add DingRoll message')
+      cre('button', {type: 'button', part: 'add-dingroll-message'}, '\u2795')
     ])
   ])
 ]);
