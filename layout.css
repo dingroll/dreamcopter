@@ -52,9 +52,9 @@ pre {
   margin: 4px;
 }
 .new-dingroll-message {
-  display: flex;
+  display: inline-flex;
   flex-flow: row;
-  margin: 4px;
+  margin: 0 4px 4px;
   padding: 4px;
 }
 .tag-line {
