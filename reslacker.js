@@ -66,10 +66,8 @@ function createDayListItem(channel, date) {
   var li = cre(teDayListItem, {textContent: channel + ' ' + date});
   var dayStatus = reslackStatusesByChannelDate &&
     reslackStatusesByChannelDate.get(channelDate);
-  if (dayStatus) {
-    if (dayStatus.ready) li.classList.add('ready');
-    else li.classList.add('partial');
-  }
+  if (dayStatus == 'ready') li.classList.add('ready');
+  else if (dayStatus == 'incomplete') li.classList.add('partial');
   li.addEventListener('click', openDay.bind(null, channel, date));
   dayListItemsByChannelDate.set(channelDate, li);
   return li;
@@ -272,7 +270,7 @@ function openNextNonReadyDay() {
     nextDayIndex = (nextDayIndex + 1) % dayCount;
     status = reslackStatusesByChannelDate &&
       reslackStatusesByChannelDate.get(slackDump.channelDates[nextDayIndex]);
-  } while (nextDayIndex != start && status && status.ready);
+  } while (nextDayIndex != start && status == 'ready');
 
   // if all days are found to be ready, just go to the next one
   if (nextDayIndex == start) nextDayIndex = (nextDayIndex + 1) % dayCount;
@@ -280,8 +278,13 @@ function openNextNonReadyDay() {
   openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
 }
 
+function saveIncompleteDay() {
+  currentDayReslacked.status = 'incomplete';
+  return saveCurrentDay();
+}
+
 function saveAndReadyAnother() {
-  currentDayReslacked.ready = true;
+  currentDayReslacked.status = 'ready';
   return saveCurrentDay().then(openNextNonReadyDay);
 }
 
@@ -366,5 +369,5 @@ reslackedDb.getChannelDayStatusMap().then(function(statusMap){
 });
 // TODO: update ready statuses in UI on save
 
-saveButton.addEventListener('click', saveCurrentDay);
+saveButton.addEventListener('click', saveIncompleteDay);
 anotherButton.addEventListener('click', saveAndReadyAnother);
