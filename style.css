@@ -24,3 +24,15 @@ button, .button {
 .day-item.ready {
   background: #9f9;
 }
+#messages {
+  background: #666;
+}
+.slack-message {
+  background: #06f;
+}
+.dingroll-message {
+  background: #f82;
+}
+.new-dingroll-message {
+  background: #f60;
+}

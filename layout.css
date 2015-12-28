@@ -9,6 +9,9 @@ body {
 [hidden] {
   display: none !important;
 }
+pre {
+  white-space: pre-wrap;
+}
 .flexrow {
   display: flex;
   flex-flow: row;
@@ -35,21 +38,22 @@ body {
 .slack-message {
   display: flex;
   flex-flow: column;
-  border: 1px solid gray;
   margin: 4px;
   padding: 4px;
 }
 .dingroll-message {
   display: flex;
   flex-flow: column;
-  border: 1px solid gray;
-  margin: 2px 0;
+  margin: 4px;
+}
+.dingroll-message > *,
+.new-dingroll-message > * {
+  margin: 4px;
 }
 .new-dingroll-message {
   display: flex;
   flex-flow: row;
-  border: 1px solid gray;
-  margin: 2px 0;
+  margin: 4px;
 }
 .tag-line {
   display: flex;
