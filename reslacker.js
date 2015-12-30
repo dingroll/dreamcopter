@@ -62,6 +62,7 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 var globalTags = document.getElementById('global-tags');
 var globalGroup = document.getElementById('global-group');
 var applyButton = document.getElementById('apply-global');
+var clearSelectionButton = document.getElementById('clear-selection');
 
 applyButton.addEventListener('click', function() {
   var dingrollMessageElements =
@@ -72,6 +73,13 @@ applyButton.addEventListener('click', function() {
       root.getPart('message-tags').value = globalTags.value;
       root.getPart('group-select').value = globalGroup.value;
     }
+  }
+});
+clearSelectionButton.addEventListener('click', function() {
+  var dingrollMessageElements =
+    elMessageContainer.getElementsByClassName('dingroll-message');
+  for (var i = 0; i < dingrollMessageElements.length; i++) {
+    dingrollMessageElements[i].getPart('message-selected').checked = false;
   }
 });
 
@@ -140,8 +148,6 @@ function createDingrollMessageElement(dingrollMessage) {
         prospect.getPart('message-selected').checked = messageCheckbox.checked;
       } else if (prospect == root) {
         belowCurrent = true;
-      } else if (messageCheckbox.checked) {
-        prospect.getPart('message-selected').checked = false;
       }
     }
   });
