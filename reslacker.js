@@ -140,6 +140,8 @@ function createDingrollMessageElement(dingrollMessage) {
         prospect.getPart('message-selected').checked = messageCheckbox.checked;
       } else if (prospect == root) {
         belowCurrent = true;
+      } else if (messageCheckbox.checked) {
+        prospect.getPart('message-selected').checked = false;
       }
     }
   });
