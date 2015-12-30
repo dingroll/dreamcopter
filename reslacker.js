@@ -24,7 +24,8 @@ var teDingrollMessage = cre('.dingroll-message', {wall: true}, [
     cre('button', {type: 'button', part: 'grab-tags'}, '\u2B11 Grab'),
     cre('input', {type: 'text', part: 'message-tags',
       pattern: "[ a-zA-Z0-9_-]*"}),
-    cre('input', {type: 'checkbox', part: 'message-selected'})
+    cre('input', {type: 'checkbox', part: 'message-selected'}),
+    cre('button', {type: 'button', part: 'check-down'}, '\u2B0E'),
   ]),
   cre('textarea', {part: 'message-body'})
 ]);
@@ -127,6 +128,21 @@ function createDingrollMessageElement(dingrollMessage) {
   messageTagsBar.value =
     dingrollMessage.tags.slice(0,fl).join(' ') + ' : ' +
     dingrollMessage.tags.slice(fl).join(' ');
+  var messageCheckbox = root.getPart('message-selected');
+  root.getPart('check-down').addEventListener('click', function() {
+    var dingrollMessageElements =
+      elMessageContainer.getElementsByClassName('dingroll-message');
+    var belowCurrent = false;
+    for (var i = 0; i < dingrollMessageElements.length; i++) {
+      var prospect = dingrollMessageElements[i];
+      if (belowCurrent) {
+        // TODO: Don't select both crossposts on one Slack message?
+        prospect.getPart('message-selected').checked = messageCheckbox.checked;
+      } else if (prospect == root) {
+        belowCurrent = true;
+      }
+    }
+  });
   return root;
 }
 
