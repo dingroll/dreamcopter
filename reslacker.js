@@ -1,7 +1,6 @@
 /* global URL jsyaml cre reslackedDb slackArchive reslackPlan */
 
 var elDaysList = document.getElementById('days');
-var topTagsBar = document.getElementById('tags');
 
 var currentSlackChannel;
 var currentSlackDate;
@@ -25,7 +24,7 @@ var teDingrollMessage = cre('.dingroll-message', {wall: true}, [
     cre('button', {type: 'button', part: 'grab-tags'}, '\u2B11 Grab'),
     cre('input', {type: 'text', part: 'message-tags',
       pattern: "[ a-zA-Z0-9_-]*"}),
-    cre('button', {type: 'button', part: 'apply-tags'}, '\u21B5 Apply')
+    cre('input', {type: 'checkbox', part: 'message-selected'})
   ]),
   cre('textarea', {part: 'message-body'})
 ]);
@@ -58,6 +57,22 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
     ])
   ])
 ]);
+
+var globalTags = document.getElementById('global-tags');
+var globalGroup = document.getElementById('global-group');
+var applyButton = document.getElementById('apply-global');
+
+applyButton.addEventListener('click', function() {
+  var dingrollMessageElements =
+    elMessageContainer.getElementsByClassName('dingroll-message');
+  for (var i = 0; i < dingrollMessageElements.length; i++) {
+    var root = dingrollMessageElements[i];
+    if (root.getPart('message-selected').checked) {
+      root.getPart('message-tags').value = globalTags.value;
+      root.getPart('group-select').value = globalGroup.value;
+    }
+  }
+});
 
 var migrationProfile; // aka reslackPlan
 
@@ -104,10 +119,8 @@ function createDingrollMessageElement(dingrollMessage) {
   });
   var messageTagsBar = root.getPart('message-tags');
   root.getPart('grab-tags').addEventListener('click', function() {
-    topTagsBar.value = messageTagsBar.value;
-  });
-  root.getPart('apply-tags').addEventListener('click', function() {
-    messageTagsBar.value = topTagsBar.value;
+    globalGroup.value = groupSelect.value;
+    globalTags.value = messageTagsBar.value;
   });
   root.getPart('message-body').value = dingrollMessage.body;
   var fl = dingrollMessage.filterLength;
@@ -350,7 +363,10 @@ showDaysButton.addEventListener('click',
 function loadMigrationPlan(planYaml) {
   migrationProfile = reslackPlan(jsyaml.safeLoad(planYaml));
   if (slackDump) migrationProfile.loadSlackArchive(slackDump);
-  // TODO: reload stuff to reflect changes to plan
+
+  removeChildren(globalGroup);
+  populateSelect(globalGroup);
+  // TODO: reload more stuff to reflect changes to plan
 }
 
 setGroupsButton.addEventListener('click', function setGroups() {

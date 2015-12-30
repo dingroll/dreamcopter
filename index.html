@@ -8,23 +8,25 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div class="flexrow small-bar">
+    <div class="flexrow equal-parent small-bar">
       <label class="button" id="import">Import Slack Archive<input type="file" id="import-file" hidden></label>
       <button type="button" id="set-groups">Define DingRoll migration</button>
       <button type="button" id="export">Export JSON</button>
     </div>
     <textarea class="region" hidden id="migration"></textarea>
-    <div class="flexrow bar">
+    <div class="flexrow equal-parent bar">
       <button type="button" id="showdays">Pick a day</button>
     </div>
     <ul class="region" hidden id="days">
     </ul>
-    <div class="flexrow bar">
-      <input id="tags" pattern="[ a-zA-Z0-9_-]*">
+    <div class="flexrow">
+      <select id="global-group"></select>
+      <input id="global-tags" pattern="[ a-zA-Z0-9_-]*">
+      <button type="button" id="apply-global">Apply</button>
     </div>
     <div class="region" id="messages">
     </div>
-    <div class="flexrow bar">
+    <div class="flexrow equal-parent bar">
       <button type="button" id="save">Save intermediate day progress</button>
       <button type="button" id="another">I like this day. ANOTHER!</button>
     </div>

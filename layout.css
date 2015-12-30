@@ -12,19 +12,20 @@ body {
 pre {
   white-space: pre-wrap;
 }
+input[type="checkbox"] {
+  width: 1.5em;
+  height: 1.5em;
+}
 .flexrow {
   display: flex;
   flex-flow: row;
 }
-.flexrow > * {
+.equal-parent > * {
   flex: 1;
 }
 .bar {
   flex: none;
   height: 48px;
-}
-.bar input {
-  font-size: 40px;
 }
 .small-bar {
   flex: none;
@@ -61,4 +62,7 @@ pre {
   display: flex;
   flex-flow: row;
   margin: 0;
+}
+#global-tags {
+  flex: 1;
 }
