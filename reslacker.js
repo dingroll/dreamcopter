@@ -63,6 +63,20 @@ var globalGroup = document.getElementById('global-group');
 var applyButton = document.getElementById('apply-global');
 var clearSelectionButton = document.getElementById('clear-selection');
 
+function javaHashCode(str) {
+  var hash = 0;
+  if (str.length == 0) return hash;
+  for (var i = 0; i < str.length; i++) {
+    var char = str.charCodeAt(i);
+    hash = (((hash<<5)-hash)+char) & 0xFFFFFFFF;
+  }
+  return hash;
+}
+
+function hslForString(str) {
+  return 'hsl(' + (javaHashCode(str) % 360) + ',80%,45%)';
+}
+
 applyButton.addEventListener('click', function() {
   var dingrollMessageElements =
     elMessageContainer.getElementsByClassName('dingroll-message');
@@ -177,6 +191,7 @@ function createSlackMessageElement(messages) {
   var originalSlackMessage = messages.slackMessage;
   var root = cre(teSlackMessage);
   root.getPart('username').textContent = messages.username;
+  root.style.background = hslForString(messages.username);
   root.getPart('timestamp').textContent =
     dateFromSlackTs(originalSlackMessage.ts).toISOString()
       .replace(/T(\d\d:\d\d:\d\d)\.\d\d\dZ$/,' $1');

@@ -1,10 +1,10 @@
 button, .button {
-  border: none;
-  border-radius: 4px;
+  background: linear-gradient(to bottom,#eee,#ddd);
+  border: 1px solid #999;
+  border-radius: 2px;
   margin: 2px;
   text-align: center;
   cursor: pointer;
-  background: buttonface;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,14 +28,14 @@ button, .button {
   background: #444;
 }
 .slack-message {
-  background: #06f;
+  background: #888;
 }
 .dingroll-message {
-  background: #f82;
+  background: #eee;
 }
 .new-dingroll-message {
-  background: #f60;
+  background: #ddd;
 }
 #global-stamp {
-  background: #720;
+  background: #ddd;
 }
