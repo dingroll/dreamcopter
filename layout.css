@@ -23,6 +23,12 @@ input[type="checkbox"] {
 .equal-parent > * {
   flex: 1;
 }
+.minor {
+  flex: none;
+}
+.major {
+  flex: 1;
+}
 .bar {
   flex: none;
   height: 48px;

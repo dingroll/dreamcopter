@@ -310,6 +310,36 @@ function saveCurrentDay() {
     });
 }
 
+function openPreviousDay() {
+  var previousDayIndex;
+  var channelDate = currentSlackChannel + '/' + currentSlackDate;
+  if (slackDump.channelDates[0] == channelDate) {
+    previousDayIndex = slackDump.channelDates.length - 1;
+  } else {
+    previousDayIndex = slackDump.channelDates.indexOf(channelDate) - 1;
+  }
+
+  openDay.apply(null, slackDump.channelDates[previousDayIndex].split('/'));
+}
+
+function openNextDay() {
+  var nextDayIndex;
+  var channelDate = currentSlackChannel + '/' + currentSlackDate;
+  var lastDayIndex = slackDump.channelDates.length - 1;
+  if (slackDump.channelDates[lastDayIndex] == channelDate) {
+    nextDayIndex = 0;
+  } else {
+    nextDayIndex = slackDump.channelDates.indexOf(channelDate) + 1;
+  }
+
+  openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
+}
+
+document.getElementById('open-previous')
+  .addEventListener('click', openPreviousDay);
+document.getElementById('open-next')
+  .addEventListener('click', openNextDay);
+
 function openNextNonReadyDay() {
   var dayCount = slackDump.channelDates.length;
   var start = slackDump.channelDates.indexOf(
