@@ -24,6 +24,10 @@ styler.addStyle([
 // style
 
 styler.addStyle([
+  ['.slack-message','#show-source']],
+    'opacity: 0.5;');
+
+styler.addStyle([
   ['.slack-message','#username'],
   ['.slack-message','#timestamp']],
     'color: white;');
