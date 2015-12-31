@@ -147,7 +147,7 @@ function createDingrollMessageElement(dingrollMessage) {
   root.getPart('message-body').value = dingrollMessage.body;
   var fl = dingrollMessage.filterLength;
   messageTagsBar.value =
-    dingrollMessage.tags.slice(0,fl).join(' ') + ' : ' +
+    dingrollMessage.tags.slice(0, fl).join(' ') + ' : ' +
     dingrollMessage.tags.slice(fl).join(' ');
   var messageCheckbox = root.getPart('message-selected');
   root.getPart('check-down').addEventListener('click', function() {
@@ -280,27 +280,54 @@ function removeChildren(element) {
 
 var elMessageContainer = document.getElementById('messages');
 
+function wrappedBehind(arr, v) {
+  return arr[0] == v ? arr[arr.length - 1] : arr[arr.indexOf(v) - 1];
+}
+function wrappedAhead(arr, v) {
+  return arr[arr.length - 1] == v ? arr[0] : arr[arr.indexOf(v) + 1];
+}
+
+var datePreviousLabel = document.getElementById('date-previous-name');
+var dateNextLabel = document.getElementById('date-next-name');
+var channelPreviousLabel = document.getElementById('channel-previous-name');
+var channelNextLabel = document.getElementById('channel-next-name');
+var currentChannelDayLabel = document.getElementById('day-readout');
+
 // Populates elements for named channel and date.
 function openDay(channel, date) {
   // HACK: state leakage - this gets used in a few places in this file
   currentSlackChannel = channel;
   currentSlackDate = date;
 
+  var channelDate = channel + '/' + date;
+  var datesForChannel = slackDump.datesByChannel.get(channel);
+
   // Clear the previously-loaded message elements
   removeChildren(elMessageContainer);
 
   // Get any existing document for the new day
   // or create an initial document if there isn't any for today
-  reslackedDb.getChannelDay(channel + '/' + date)
-    .then(function(doc){
-      currentDayReslacked = migrationProfile.freshDayDoc(channel, date, doc);
-      var slackMessages = currentDayReslacked.messages;
-      for (var i = 0; i < slackMessages.length; i++) {
-        elMessageContainer.appendChild(
-          createSlackMessageElement(slackMessages[i]));
-      }
-      // TODO: pre-fill top tag bar?
-    });
+  reslackedDb.getChannelDay(channelDate).then(function (doc) {
+
+    currentDayReslacked = migrationProfile.freshDayDoc(channel, date, doc);
+    var slackMessages = currentDayReslacked.messages;
+
+    datePreviousLabel.textContent =
+      wrappedBehind(slackDump.channelDates, channelDate).replace('/', ' ');
+    dateNextLabel.textContent =
+      wrappedAhead(slackDump.channelDates, channelDate).replace('/', ' ');
+    channelPreviousLabel.textContent =
+      channel + ' ' + wrappedBehind(datesForChannel, date);
+    channelNextLabel.textContent =
+      channel + ' ' + wrappedAhead(datesForChannel, date);
+    currentChannelDayLabel.textContent = channel + ' ' + date;
+
+    for (var i = 0; i < slackMessages.length; i++) {
+      elMessageContainer.appendChild(
+        createSlackMessageElement(slackMessages[i]));
+    }
+    // TODO: pre-fill top tag bar?
+  });
 }
 
 function saveCurrentDay() {
@@ -316,34 +343,33 @@ function saveCurrentDay() {
 }
 
 function openPreviousDay() {
-  var previousDayIndex;
-  var channelDate = currentSlackChannel + '/' + currentSlackDate;
-  if (slackDump.channelDates[0] == channelDate) {
-    previousDayIndex = slackDump.channelDates.length - 1;
-  } else {
-    previousDayIndex = slackDump.channelDates.indexOf(channelDate) - 1;
-  }
-
-  openDay.apply(null, slackDump.channelDates[previousDayIndex].split('/'));
+  return openDay.apply(null, wrappedBehind(slackDump.channelDates,
+    currentSlackChannel + '/' + currentSlackDate).split('/'));
 }
 
 function openNextDay() {
-  var nextDayIndex;
-  var channelDate = currentSlackChannel + '/' + currentSlackDate;
-  var lastDayIndex = slackDump.channelDates.length - 1;
-  if (slackDump.channelDates[lastDayIndex] == channelDate) {
-    nextDayIndex = 0;
-  } else {
-    nextDayIndex = slackDump.channelDates.indexOf(channelDate) + 1;
-  }
-
-  openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
+  return openDay.apply(null, wrappedAhead(slackDump.channelDates,
+    currentSlackChannel + '/' + currentSlackDate).split('/'));
 }
 
-document.getElementById('open-previous')
+function openPreviousDayForChannel() {
+  return openDay(currentSlackChannel, wrappedBehind(
+    slackDump.datesByChannel.get(currentSlackChannel), currentSlackDate));
+}
+
+function openNextDayForChannel() {
+  return openDay(currentSlackChannel, wrappedAhead(
+    slackDump.datesByChannel.get(currentSlackChannel), currentSlackDate));
+}
+
+document.getElementById('date-previous')
   .addEventListener('click', openPreviousDay);
-document.getElementById('open-next')
+document.getElementById('date-next')
   .addEventListener('click', openNextDay);
+document.getElementById('channel-previous')
+  .addEventListener('click', openPreviousDayForChannel);
+document.getElementById('channel-next')
+  .addEventListener('click', openNextDayForChannel);
 
 function openNextNonReadyDay() {
   var dayCount = slackDump.channelDates.length;

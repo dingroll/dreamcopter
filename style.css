@@ -2,12 +2,8 @@ button, .button {
   background: linear-gradient(to bottom,#eee,#ddd);
   border: 1px solid #999;
   border-radius: 2px;
-  margin: 2px;
   text-align: center;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 #save {
   background: #dd8;

@@ -16,6 +16,17 @@ input[type="checkbox"] {
   width: 1.5em;
   height: 1.5em;
 }
+button, .button {
+  margin: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.centerbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .flexrow {
   display: flex;
   flex-flow: row;
