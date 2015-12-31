@@ -14,8 +14,10 @@
       <button type="button" id="export">Export JSON</button>
     </div>
     <textarea class="region" hidden id="migration"></textarea>
-    <div class="flexrow equal-parent bar">
-      <button type="button" id="showdays">Pick a day</button>
+    <div class="flexrow bar">
+      <button type="button" class="minor" id="open-previous">&#x2b05;</button>
+      <button type="button" class="major" id="showdays">Pick a day</button>
+      <button type="button" class="minor" id="open-next">&#x27a1;</button>
     </div>
     <ul class="region" hidden id="days">
     </ul>
@@ -28,14 +30,12 @@
     <div class="region" id="messages">
     </div>
     <div class="flexrow bar">
-      <button type="button" class="minor" id="open-previous">&#x2b05;</button>
       <button type="button" class="major" id="save">
         Save intermediate day progress
       </button>
       <button type="button" class="major" id="another">
         I like this day. ANOTHER!
       </button>
-      <button type="button" class="minor" id="open-next">&#x27a1;</button>
     </div>
     <script src="vendor/cre.js"></script>
     <script src="vendor/getpart-polyfill.js"></script>
