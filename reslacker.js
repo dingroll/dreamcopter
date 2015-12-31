@@ -174,11 +174,10 @@ function dateFromSlackTs(ts) {
   return new Date(parseInt(ts.replace(/\.\d+$/,''),10)*1000);
 }
 
-function createSlackMessageElement(slackMessage) {
-  var originalSlackMessage =
-    currentDaySlackMessagesByTs.get(slackMessage.slackTs);
+function createSlackMessageElement(messages) {
+  var originalSlackMessage = messages.slackMessage;
   var root = cre(teSlackMessage);
-  root.getPart('username').textContent = slackMessage.username;
+  root.getPart('username').textContent = messages.username;
   root.getPart('timestamp').textContent =
     dateFromSlackTs(originalSlackMessage.ts).toISOString()
       .replace(/T(\d\d:\d\d:\d\d)\.\d\d\dZ$/,' $1');
@@ -201,7 +200,7 @@ function createSlackMessageElement(slackMessage) {
   });
   var lastMessage = root.getPart('new-dingroll-message');
   var dingrollMessageContainer = root.getPart('dingroll-messages');
-  var dingrollMessages = slackMessage.dingrollMessages;
+  var dingrollMessages = messages.dingrollMessages;
   var initialDingrollMessageElements = [];
   for (var i = 0; i < dingrollMessages.length; i++) {
     initialDingrollMessageElements[i] =
@@ -219,7 +218,7 @@ function createSlackMessageElement(slackMessage) {
     dingrollMessageContainer.insertBefore(createDingrollMessageElement({
       group: newGroupName,
       body: migrationProfile.slackMessageToDingroll(
-        currentDaySlackMessagesByTs.get(slackMessage.slackTs).text),
+        originalSlackMessage.text),
       tags: tags,
       filterLength: tags.length
       }), lastMessage);
@@ -302,6 +301,7 @@ function openDay(channel, date) {
 function saveCurrentDay() {
   var savingChannelDate = currentSlackChannel + '/' + currentSlackDate;
   var savingStatus = currentDayReslacked.status;
+  currentDayReslacked.committed = new Date().toISOString();
   updateDayDocMessages();
   return reslackedDb.saveChannelDay(savingChannelDate, currentDayReslacked)
     .then(function(){
