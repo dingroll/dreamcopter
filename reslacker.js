@@ -7,8 +7,7 @@ var currentSlackDate;
 
 // Things that are grody about this file, part 1: no distinction between
 // slack message data from the dump and slack message data in the converted
-// document (even though they're completely different things).
-var currentDaySlackMessagesByTs = new Map();
+// document (what should be called a "message group" or something like that).
 var currentDayReslacked;
 
 var reslackStatusesByChannelDate;
@@ -271,15 +270,6 @@ function openDay(channel, date) {
   // HACK: state leakage - this gets used in a few places in this file
   currentSlackChannel = channel;
   currentSlackDate = date;
-
-  // Get the list of Slack messages directly, for "show original" info
-  var originalMessages = slackDump.getMessagesForChannelDate(
-    channel + '/' + date);
-  currentDaySlackMessagesByTs.clear();
-  for (var i = 0; i < originalMessages.length; i++) {
-    currentDaySlackMessagesByTs.set(
-      originalMessages[i].ts, originalMessages[i]);
-  }
 
   // Clear the previously-loaded message elements
   removeChildren(elMessageContainer);
