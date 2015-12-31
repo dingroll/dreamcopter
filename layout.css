@@ -58,6 +58,12 @@ input[type="checkbox"] {
 .new-dingroll-message * {
   margin: 4px;
 }
+.loose-bar {
+  padding: 4px;
+}
+.loose-bar * {
+  margin: 4px;
+}
 .new-dingroll-message {
   display: inline-flex;
   flex-flow: row;
