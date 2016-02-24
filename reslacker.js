@@ -437,6 +437,8 @@ var setGroupsButton = document.getElementById('set-groups');
 var migrationProfileTextArea = document.getElementById('migration');
 var saveButton = document.getElementById('save');
 var anotherButton = document.getElementById('another');
+var setSyncAddressButton = document.getElementById('export');
+var syncAddressInput = document.getElementById('migration');
 
 function toggleVisibility(element) {
   element.hidden = !element.hidden;
@@ -478,6 +480,27 @@ if (reslackYaml) {
   migrationProfileTextArea.value = reslackYaml;
   loadMigrationPlan(reslackYaml);
 }
+
+var syncAddress = localStorage.getItem('dreamcopterSyncAddress');
+if (syncAddress) {
+  reslackedDb.sync(syncAddress);
+}
+
+setSyncAddressButton.addEventListener('click', function setGroups() {
+  if (syncAddressInput.hidden) {
+    syncAddressInput.hidden = false;
+  } else {
+    syncAddress = syncAddressInput.value;
+    // save the address for future visits
+    localStorage.setItem('dreamcopterSyncAddress', syncAddress);
+    // hide the input
+    syncAddressInput.hidden = true;
+    // start new sync
+    if (syncAddress) {
+      reslackedDb.sync(syncAddress);
+    }
+  }
+});
 
 reslackedDb.getChannelDayStatusMap().then(function(statusMap){
   // TODO: update ready statuses in UI if zip has already been loaded
