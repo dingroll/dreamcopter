@@ -438,7 +438,7 @@ var migrationProfileTextArea = document.getElementById('migration');
 var saveButton = document.getElementById('save');
 var anotherButton = document.getElementById('another');
 var setSyncAddressButton = document.getElementById('export');
-var syncAddressInput = document.getElementById('migration');
+var syncAddressInput = document.getElementById('sync-address');
 
 function toggleVisibility(element) {
   element.hidden = !element.hidden;
