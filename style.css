@@ -38,3 +38,6 @@ button, .button {
 :invalid {
   color: red;
 }
+.current {
+  color: blue;
+}
