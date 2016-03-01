@@ -22,7 +22,7 @@ var teDingrollMessage = cre('.dingroll-message', {wall: true}, [
     cre('button', {type: 'button', part: 'delete-message'}, '\u274C'),
     cre('button', {type: 'button', part: 'grab-tags'}, '\u2B11 Grab'),
     cre('input', {type: 'text', part: 'message-tags',
-      pattern: "[ a-zA-Z0-9_-]*"}),
+      pattern: "[ a-zA-Z0-9_-]+:[ a-zA-Z0-9_-]*"}),
     cre('input', {type: 'checkbox', part: 'message-selected'}),
     cre('button', {type: 'button', part: 'check-down'}, '\u2B0E'),
   ]),

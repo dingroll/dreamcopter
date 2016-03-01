@@ -35,3 +35,6 @@ button, .button {
 #global-stamp {
   background: #ddd;
 }
+:invalid {
+  color: red;
+}
