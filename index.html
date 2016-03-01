@@ -15,6 +15,22 @@
     </div>
     <textarea class="region" hidden id="migration"></textarea>
     <input hidden id="sync-address">
+    <div class="flexrow loose-bar" id="global-stamp">
+      <select id="global-group"></select>
+      <input id="global-tags" pattern="[ a-zA-Z0-9_-]+:[ a-zA-Z0-9_-]*">
+      <button type="button" id="apply-global">Apply</button>
+      <button type="button" id="clear-selection">&#x2610;</button>
+    </div>
+    <div class="region" id="messages">
+    </div>
+    <div class="flexrow bar">
+      <button type="button" class="major" id="save">
+        Save intermediate day progress
+      </button>
+      <button type="button" class="major" id="another">
+        Save finished day
+      </button>
+    </div>
     <div class="super-row">
       <div class="flexrow">
         <button type="button" class="minor" id="channel-previous">
@@ -37,22 +53,6 @@
     </div>
     <ul class="region" hidden id="days">
     </ul>
-    <div class="flexrow loose-bar" id="global-stamp">
-      <select id="global-group"></select>
-      <input id="global-tags" pattern="[ a-zA-Z0-9_-]+:[ a-zA-Z0-9_-]*">
-      <button type="button" id="apply-global">Apply</button>
-      <button type="button" id="clear-selection">&#x2610;</button>
-    </div>
-    <div class="region" id="messages">
-    </div>
-    <div class="flexrow bar">
-      <button type="button" class="major" id="save">
-        Save intermediate day progress
-      </button>
-      <button type="button" class="major" id="another">
-        I like this day. ANOTHER!
-      </button>
-    </div>
     <script src="vendor/cre.js"></script>
     <script src="vendor/getpart-polyfill.js"></script>
     <script src="vendor/js-yaml.js"></script>

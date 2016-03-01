@@ -295,6 +295,12 @@ var currentChannelDayLabel = document.getElementById('day-readout');
 
 // Populates elements for named channel and date.
 function openDay(channel, date) {
+  if (currentSlackChannel && currentSlackDate) {
+    var lastChannelDate = currentSlackChannel + '/' + currentSlackDate;
+    var liLast = dayListItemsByChannelDate.get(lastChannelDate);
+    liLast.classList.remove('current');
+  }
+
   // HACK: state leakage - this gets used in a few places in this file
   currentSlackChannel = channel;
   currentSlackDate = date;
@@ -326,6 +332,10 @@ function openDay(channel, date) {
       elMessageContainer.appendChild(
         createSlackMessageElement(slackMessages[i]));
     }
+
+    var li = dayListItemsByChannelDate.get(channelDate);
+    li.classList.add('current');
+    li.scrollIntoView();
     // TODO: pre-fill top tag bar?
   });
 }
@@ -396,9 +406,9 @@ function saveIncompleteDay() {
   return saveCurrentDay();
 }
 
-function saveAndReadyAnother() {
+function saveReadyDay() {
   currentDayReslacked.status = 'ready';
-  return saveCurrentDay().then(openNextNonReadyDay);
+  return saveCurrentDay();
 }
 
 function initSlack(archive) {
@@ -509,4 +519,4 @@ reslackedDb.getChannelDayStatusMap().then(function(statusMap){
 // TODO: update ready statuses in UI on save
 
 saveButton.addEventListener('click', saveIncompleteDay);
-anotherButton.addEventListener('click', saveAndReadyAnother);
+anotherButton.addEventListener('click', saveReadyDay);
