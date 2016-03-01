@@ -335,7 +335,7 @@ function openDay(channel, date) {
 
     var li = dayListItemsByChannelDate.get(channelDate);
     li.classList.add('current');
-    li.scrollIntoView();
+    li.scrollIntoViewIfNeeded();
     // TODO: pre-fill top tag bar?
   });
 }
