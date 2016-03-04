@@ -100,12 +100,13 @@ function forSelectedMessages(f) {
   }
 }
 
-function splitOnSpaces (s) {
-  return s.trim().split(/\s+/g);
+function spaceSeparatedSpans (s) {
+  s = s.trim();
+  return s == '' ? [] : s.split(/\s+/g);
 }
 
 function tagStringToLists(tagString) {
-  return tagString.split(':', 2).map(splitOnSpaces);
+  return tagString.split(':', 2).map(spaceSeparatedSpans);
 }
 
 function tagListsToString(tagLists) {
