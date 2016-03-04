@@ -61,6 +61,8 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 var globalTags = document.getElementById('global-tags');
 var globalGroup = document.getElementById('global-group');
 var applyButton = document.getElementById('apply-global');
+var selectionCount = 0;
+var selectionCountOutput = document.getElementById('selection-count');
 var clearSelectionButton = document.getElementById('clear-selection');
 
 function javaHashCode(str) {
@@ -94,6 +96,7 @@ clearSelectionButton.addEventListener('click', function() {
   for (var i = 0; i < dingrollMessageElements.length; i++) {
     dingrollMessageElements[i].getPart('message-selected').checked = false;
   }
+  selectionCountOutput.textContent = selectionCount = 0;
 });
 
 var migrationProfile; // aka reslackPlan
@@ -150,6 +153,10 @@ function createDingrollMessageElement(dingrollMessage) {
     dingrollMessage.tags.slice(0, fl).join(' ') + ' : ' +
     dingrollMessage.tags.slice(fl).join(' ');
   var messageCheckbox = root.getPart('message-selected');
+  messageCheckbox.addEventListener('input', function() {
+    selectionCount += messageCheckbox.checked ? 1 : -1;
+    selectionCountOutput.textContent = selectionCount;
+  });
   root.getPart('check-down').addEventListener('click', function() {
     var dingrollMessageElements =
       elMessageContainer.getElementsByClassName('dingroll-message');
@@ -159,10 +166,12 @@ function createDingrollMessageElement(dingrollMessage) {
       if (belowCurrent) {
         // TODO: Don't select both crossposts on one Slack message?
         prospect.getPart('message-selected').checked = messageCheckbox.checked;
+        selectionCount += messageCheckbox.checked ? 1 : -1;
       } else if (prospect == root) {
         belowCurrent = true;
       }
     }
+    selectionCountOutput.textContent = selectionCount;
   });
   return root;
 }
@@ -310,6 +319,7 @@ function openDay(channel, date) {
 
   // Clear the previously-loaded message elements
   removeChildren(elMessageContainer);
+  selectionCountOutput.textContent = selectionCount = 0;
 
   // Get any existing document for the new day
   // or create an initial document if there isn't any for today
