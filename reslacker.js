@@ -493,6 +493,7 @@ if (reslackYaml) {
 
 var syncAddress = localStorage.getItem('dreamcopterSyncAddress');
 if (syncAddress) {
+  syncAddressInput.value = syncAddress;
   reslackedDb.sync(syncAddress);
 }
 
