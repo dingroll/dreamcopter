@@ -60,7 +60,9 @@ var teSlackMessage = cre('.slack-message', {wall: true}, [
 
 var globalTags = document.getElementById('global-tags');
 var globalGroup = document.getElementById('global-group');
-var applyButton = document.getElementById('apply-global');
+var addGlobalButton = document.getElementById('add-global');
+var removeGlobalButton = document.getElementById('remove-global');
+var applyGlobalButton = document.getElementById('apply-global');
 var selectionCount = 0;
 var selectionCountOutput = document.getElementById('selection-count');
 var clearSelectionButton = document.getElementById('clear-selection');
@@ -79,17 +81,80 @@ function hslForString(str) {
   return 'hsl(' + (javaHashCode(str) % 360) + ',80%,45%)';
 }
 
-applyButton.addEventListener('click', function() {
+function setGlobalOperationVisibility() {
+  var applyMode = /:/.test(globalTags.value);
+  addGlobalButton.hidden = removeGlobalButton.hidden = applyMode;
+  applyGlobalButton.hidden = !applyMode;
+}
+
+globalTags.addEventListener('input', setGlobalOperationVisibility);
+
+function forSelectedMessages(f) {
   var dingrollMessageElements =
     elMessageContainer.getElementsByClassName('dingroll-message');
   for (var i = 0; i < dingrollMessageElements.length; i++) {
     var root = dingrollMessageElements[i];
     if (root.getPart('message-selected').checked) {
-      root.getPart('message-tags').value = globalTags.value;
-      root.getPart('group-select').value = globalGroup.value;
+      f(root);
     }
   }
-});
+}
+
+function splitOnSpaces (s) {
+  return s.trim().split(/\s+/g);
+}
+
+function tagStringToLists(tagString) {
+  return tagString.split(':', 2).map(splitOnSpaces);
+}
+
+function tagListsToString(tagLists) {
+  return tagLists.map(function(list) {return list.join(' ')}).join(' : ');
+}
+
+function addGlobalTags() {
+  var globalTagList = globalTags.value.split(/\s+/g);
+  return forSelectedMessages(function(root) {
+    var messageTagsInput = root.getPart('message-tags');
+    var messageTagLists = tagStringToLists(messageTagsInput.value);
+    var searchList = messageTagLists[0].concat(messageTagLists[1]);
+    for (var i = 0; i < globalTagList.length; i++) {
+      if (searchList.indexOf(globalTagList[i]) < 0) {
+        messageTagLists[1].push(globalTagList[i]);
+      }
+    }
+    messageTagsInput.value = tagListsToString(messageTagLists);
+  });
+}
+
+function removeGlobalTags() {
+  // TODO: normalize tags (not a big deal, but technically correct)
+  var globalTagList = globalTags.value.split(/\s+/g);
+  function tagNotInGlobalTags(tag) {
+    return globalTagList.indexOf() < 0;
+  }
+  return forSelectedMessages(function(root) {
+    var messageTagsInput = root.getPart('message-tags');
+    messageTagsInput.value = tagListsToString(
+      tagStringToLists(messageTagsInput.value).map(function(half){
+        return half.filter(tagNotInGlobalTags);
+      }));
+  });
+}
+
+function applyGlobalTags() {
+  var globalTagsValue = globalTags.value;
+  var globalGroupValue = globalGroup.value;
+  return forSelectedMessages(function(root) {
+    root.getPart('message-tags').value = globalTagsValue;
+    root.getPart('group-select').value = globalGroupValue;
+  });
+}
+
+addGlobalButton.addEventListener('click', addGlobalTags);
+removeGlobalButton.addEventListener('click', removeGlobalTags);
+applyGlobalButton.addEventListener('click', applyGlobalTags);
+
 clearSelectionButton.addEventListener('click', function() {
   var dingrollMessageElements =
     elMessageContainer.getElementsByClassName('dingroll-message');
@@ -146,6 +211,7 @@ function createDingrollMessageElement(dingrollMessage) {
   root.getPart('grab-tags').addEventListener('click', function() {
     globalGroup.value = groupSelect.value;
     globalTags.value = messageTagsBar.value;
+    setGlobalOperationVisibility();
   });
   root.getPart('message-body').value = dingrollMessage.body;
   var fl = dingrollMessage.filterLength;
@@ -258,14 +324,12 @@ function createSlackMessageElement(messages) {
 }
 
 function dingrollMessageFromElement(root) {
-  var tagHalves = root.getPart('message-tags').value.split(':',2);
-  var filterTags = tagHalves[0].trim().split(/\s+/g);
-  var supplementalTags = tagHalves[1].trim().split(/\s+/g);
+  var tagLists = tagStringToLists(root.getPart('message-tags').value);
   return {
     group: root.getPart('group-select').value,
     body: root.getPart('message-body').value,
-    tags: filterTags.concat(supplementalTags),
-    filterLength: filterTags.length
+    tags: tagLists[0].concat(tagLists[1]),
+    filterLength: tagLists[0].length
   };
 }
 
