@@ -30,6 +30,7 @@ button, .button {
 .flexrow {
   display: flex;
   flex-flow: row;
+  align-items: center;
 }
 .equal-parent > * {
   flex: 1;

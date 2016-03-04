@@ -153,7 +153,7 @@ function createDingrollMessageElement(dingrollMessage) {
     dingrollMessage.tags.slice(0, fl).join(' ') + ' : ' +
     dingrollMessage.tags.slice(fl).join(' ');
   var messageCheckbox = root.getPart('message-selected');
-  messageCheckbox.addEventListener('input', function() {
+  messageCheckbox.addEventListener('click', function() {
     selectionCount += messageCheckbox.checked ? 1 : -1;
     selectionCountOutput.textContent = selectionCount;
   });
@@ -164,9 +164,12 @@ function createDingrollMessageElement(dingrollMessage) {
     for (var i = 0; i < dingrollMessageElements.length; i++) {
       var prospect = dingrollMessageElements[i];
       if (belowCurrent) {
-        // TODO: Don't select both crossposts on one Slack message?
-        prospect.getPart('message-selected').checked = messageCheckbox.checked;
-        selectionCount += messageCheckbox.checked ? 1 : -1;
+        var prospectSelection = prospect.getPart('message-selected');
+        // TODO: Only select DingRoll messages for the same group
+        if (prospectSelection.checked != messageCheckbox.checked) {
+          prospectSelection.checked = messageCheckbox.checked;
+          selectionCount += messageCheckbox.checked ? 1 : -1;
+        }
       } else if (prospect == root) {
         belowCurrent = true;
       }
