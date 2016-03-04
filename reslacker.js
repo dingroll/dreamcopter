@@ -132,7 +132,7 @@ function removeGlobalTags() {
   // TODO: normalize tags (not a big deal, but technically correct)
   var globalTagList = globalTags.value.split(/\s+/g);
   function tagNotInGlobalTags(tag) {
-    return globalTagList.indexOf() < 0;
+    return globalTagList.indexOf(tag) < 0;
   }
   return forSelectedMessages(function(root) {
     var messageTagsInput = root.getPart('message-tags');
