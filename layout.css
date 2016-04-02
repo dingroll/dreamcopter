@@ -45,6 +45,7 @@ button, .button {
 .bar {
   flex: none;
   height: 48px;
+  align-items: stretch;
 }
 .small-bar {
   flex: none;
