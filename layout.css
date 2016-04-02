@@ -90,3 +90,17 @@ button, .button {
 #global-tags {
   flex: 1;
 }
+.proxied {
+  /* hide without breaking tab focus:
+     see http://tympanus.net/codrops/2015/09/15/styling-customizing-file-inputs-smart-way/
+  */
+	overflow: hidden;
+	position: absolute;
+	top: 0; left: 0; right: 100%; bottom: 100%;
+  opacity: 0;
+	z-index: -1;
+}
+.proxied:focus + label {
+	outline: 1px dotted #000;
+	outline: -webkit-focus-ring-color auto 5px;
+}
