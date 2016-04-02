@@ -18,6 +18,7 @@ input[type="checkbox"] {
 }
 button, .button {
   margin: 2px;
+  padding: 1px 6px;
   display: flex;
   align-items: center;
   justify-content: center;
