@@ -11,10 +11,10 @@
   <body>
     <div class="flexrow equal-parent small-bar">
       <input type="file" id="import-file" class="proxied"><label class="button" id="import" for="import-file">Import Slack Archive</label>
-      <button type="button" id="set-groups">Define DingRoll migration</button>
+      <button type="button" id="set-groups">Adjust dreamplan</button>
       <button type="button" id="export">Set sync address</button>
     </div>
-    <textarea class="region" hidden id="migration"></textarea>
+    <textarea class="region" hidden id="dreamplan"></textarea>
     <input hidden id="sync-address">
     <div class="flexrow loose-bar" id="global-stamp">
       <select id="global-group"></select>
@@ -28,10 +28,10 @@
     <div class="region" id="messages">
     </div>
     <div class="flexrow bar">
-      <button type="button" class="major" id="save">
+      <button type="button" class="major" id="save-intermediate">
         Save intermediate day progress
       </button>
-      <button type="button" class="major" id="another">
+      <button type="button" class="major" id="save-finished">
         Save finished day
       </button>
     </div>

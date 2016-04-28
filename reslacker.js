@@ -1,17 +1,13 @@
-/* global URL jsyaml cre reslackedDb slackArchive reslackPlan */
+/* global URL jsyaml cre reslackedDb importArchive dreamPlanner */
 
 var elDaysList = document.getElementById('days');
 
 var currentSlackChannel;
 var currentSlackDate;
 
-// Things that are grody about this file, part 1: no distinction between
-// slack message data from the dump and slack message data in the converted
-// document (what should be called a "message group" or something like that).
 var currentDayReslacked;
 
 var reslackStatusesByChannelDate;
-var slackDump;
 
 var teDayListItem = cre('li.day-item');
 var dayListItemsByChannelDate = new Map();
@@ -357,21 +353,39 @@ function removeChildren(element) {
 
 var elMessageContainer = document.getElementById('messages');
 
-function wrappedBehind(arr, v) {
-  return arr[0] == v ? arr[arr.length - 1] : arr[arr.indexOf(v) - 1];
-}
-function wrappedAhead(arr, v) {
-  return arr[arr.length - 1] == v ? arr[0] : arr[arr.indexOf(v) + 1];
-}
+var neighbors = {
+  channel: {
+    next: null,
+    previous: null
+  },
+  date: {
+    next: null,
+    previous: null
+  }
+};
 
-var datePreviousLabel = document.getElementById('date-previous-name');
-var dateNextLabel = document.getElementById('date-next-name');
-var channelPreviousLabel = document.getElementById('channel-previous-name');
-var channelNextLabel = document.getElementById('channel-next-name');
+var neighborLabels = {
+  channel: {
+    next: document.getElementById('channel-next-name'),
+    previous: document.getElementById('channel-previous-name')
+  },
+  date: {
+    next: document.getElementById('date-next-name'),
+    previous: document.getElementById('date-previous-name')
+  }
+};
+
 var currentChannelDayLabel = document.getElementById('day-readout');
 
 // Populates elements for named channel and date.
 function openDay(channel, date) {
+  function setNeighbor(type, direction) {
+    return function (channelDate) {
+      neighbors[type][direction] = channelDate;
+      neighborLabels[type][direction].textContent =
+        channelDate.replace('/',' ');
+    };
+  }
   if (currentSlackChannel && currentSlackDate) {
     var lastChannelDate = currentSlackChannel + '/' + currentSlackDate;
     var liLast = dayListItemsByChannelDate.get(lastChannelDate);
@@ -383,7 +397,6 @@ function openDay(channel, date) {
   currentSlackDate = date;
 
   var channelDate = channel + '/' + date;
-  var datesForChannel = slackDump.datesByChannel.get(channel);
 
   // Clear the previously-loaded message elements
   removeChildren(elMessageContainer);
@@ -396,14 +409,14 @@ function openDay(channel, date) {
     currentDayReslacked = migrationProfile.freshDayDoc(channel, date, doc);
     var slackMessages = currentDayReslacked.messages;
 
-    datePreviousLabel.textContent =
-      wrappedBehind(slackDump.channelDates, channelDate).replace('/', ' ');
-    dateNextLabel.textContent =
-      wrappedAhead(slackDump.channelDates, channelDate).replace('/', ' ');
-    channelPreviousLabel.textContent =
-      channel + ' ' + wrappedBehind(datesForChannel, date);
-    channelNextLabel.textContent =
-      channel + ' ' + wrappedAhead(datesForChannel, date);
+    reslackedDb.getNextChannelDate()
+      .then(setNeighbor('date','next'));
+    reslackedDb.getPreviousChannelDate()
+      .then(setNeighbor('date','previous'));
+    reslackedDb.getNextDateInChannel()
+      .then(setNeighbor('channel','next'));
+    reslackedDb.getPreviousDateInChannel()
+      .then(setNeighbor('channel','previous'));
     currentChannelDayLabel.textContent = channel + ' ' + date;
 
     for (var i = 0; i < slackMessages.length; i++) {
@@ -430,53 +443,24 @@ function saveCurrentDay() {
     });
 }
 
-function openPreviousDay() {
-  return openDay.apply(null, wrappedBehind(slackDump.channelDates,
-    currentSlackChannel + '/' + currentSlackDate).split('/'));
+function openChannelDate(channelDate) {
+  return openDay.apply(null, channelDate.split('/'));
 }
 
-function openNextDay() {
-  return openDay.apply(null, wrappedAhead(slackDump.channelDates,
-    currentSlackChannel + '/' + currentSlackDate).split('/'));
+function hookupNeighborOpener(type, direction) {
+  document.getElementById(type + '-' + direction)
+    .addEventListener('click', function () {
+      return openChannelDate(neighbors[type][direction]);
+    });
 }
 
-function openPreviousDayForChannel() {
-  return openDay(currentSlackChannel, wrappedBehind(
-    slackDump.datesByChannel.get(currentSlackChannel), currentSlackDate));
-}
+hookupNeighborOpener('date', 'previous');
+hookupNeighborOpener('date', 'next');
+hookupNeighborOpener('channel', 'previous');
+hookupNeighborOpener('channel', 'next');
 
-function openNextDayForChannel() {
-  return openDay(currentSlackChannel, wrappedAhead(
-    slackDump.datesByChannel.get(currentSlackChannel), currentSlackDate));
-}
-
-document.getElementById('date-previous')
-  .addEventListener('click', openPreviousDay);
-document.getElementById('date-next')
-  .addEventListener('click', openNextDay);
-document.getElementById('channel-previous')
-  .addEventListener('click', openPreviousDayForChannel);
-document.getElementById('channel-next')
-  .addEventListener('click', openNextDayForChannel);
-
-function openNextNonReadyDay() {
-  var dayCount = slackDump.channelDates.length;
-  var start = slackDump.channelDates.indexOf(
-    currentSlackChannel + '/' + currentSlackDate);
-  var nextDayIndex = start;
-  var status;
-
-  // advance as long as the next day is ready
-  do {
-    nextDayIndex = (nextDayIndex + 1) % dayCount;
-    status = reslackStatusesByChannelDate &&
-      reslackStatusesByChannelDate.get(slackDump.channelDates[nextDayIndex]);
-  } while (nextDayIndex != start && status == 'ready');
-
-  // if all days are found to be ready, just go to the next one
-  if (nextDayIndex == start) nextDayIndex = (nextDayIndex + 1) % dayCount;
-
-  openDay.apply(null, slackDump.channelDates[nextDayIndex].split('/'));
+function openFirstNonReadyDay() {
+  return reslackedDb.getFirstNonReadyChannelDate().then(openChannelDate);
 }
 
 function saveIncompleteDay() {
@@ -489,26 +473,10 @@ function saveReadyDay() {
   return saveCurrentDay();
 }
 
-function initSlack(archive) {
-  slackDump = archive;
-  if (migrationProfile) migrationProfile.loadSlackArchive(archive);
-  var channelDates = archive.channelDates;
-  for (var i = 0; i < channelDates.length; i++) {
-    elDaysList.appendChild(
-      createDayListItem.apply(null, channelDates[i].split('/')));
-  }
-  // HACK: We open the *first* non-ready day by pretending we're at the last
-  // day, then wrapping around.
-  var lastDay = channelDates[channelDates.length-1].split('/');
-  currentSlackChannel = lastDay[0];
-  currentSlackDate = lastDay[1];
-  openNextNonReadyDay();
-}
-
 function importSlackZip(file) {
   var fileReader = new FileReader();
   fileReader.onload = function() {
-    initSlack(slackArchive(this.result));
+    importArchive(this.result, reslackedDb);
   };
   fileReader.readAsArrayBuffer(file);
 }
@@ -522,9 +490,9 @@ importInput.addEventListener('change', function () {
 
 var showDaysButton = document.getElementById('showdays');
 var setGroupsButton = document.getElementById('set-groups');
-var migrationProfileTextArea = document.getElementById('migration');
-var saveButton = document.getElementById('save');
-var anotherButton = document.getElementById('another');
+var dreamPlanTextArea = document.getElementById('dreamplan');
+var saveIntermediateButton = document.getElementById('save-intermediate');
+var saveFinishedButton = document.getElementById('save-finished');
 var setSyncAddressButton = document.getElementById('export');
 var syncAddressInput = document.getElementById('sync-address');
 
@@ -536,38 +504,35 @@ showDaysButton.addEventListener('click',
   toggleVisibility.bind(null, elDaysList));
 
 function loadMigrationPlan(planYaml) {
-  migrationProfile = reslackPlan(jsyaml.safeLoad(planYaml));
-  if (slackDump) migrationProfile.loadSlackArchive(slackDump);
-
-  removeChildren(globalGroup);
-  populateSelect(globalGroup);
-  // TODO: reload more stuff to reflect changes to plan
+  var planObject = null;
+  try {
+    planObject = jsyaml.safeLoad(planYaml);
+    migrationProfile = dreamPlanner(planObject);
+  } catch (err) {
+    // TODO: handle invalid YAML better
+    console.error(err);
+  }
+  if (planObject && migrationProfile) {
+    removeChildren(globalGroup);
+    populateSelect(globalGroup);
+    // TODO: reload more stuff to reflect changes to plan
+  }
 }
 
 setGroupsButton.addEventListener('click', function setGroups() {
-  if (migrationProfileTextArea.hidden) {
-    migrationProfileTextArea.hidden = false;
+  if (dreamPlanTextArea.hidden) {
+    dreamPlanTextArea.hidden = false;
   } else {
-    try {
-      reslackYaml = migrationProfileTextArea.value;
-      // load the plan
-      loadMigrationPlan(reslackYaml);
-      // save the plan for future visits
-      localStorage.setItem('reslackPlan', reslackYaml);
-      // hide the plan edit region
-      migrationProfileTextArea.hidden = true;
-    } catch (err) {
-      // TODO: handle invalid YAML better
-      console.error(err);
-    }
+    var reslackYaml = dreamPlanTextArea.value;
+    // load the plan
+    loadMigrationPlan(reslackYaml);
+    // save the plan for future visits
+    // TODO: Don't save if the YAML's invalid?
+    reslackedDb.saveMigrationPlan(reslackYaml);
+    // hide the plan edit region
+    dreamPlanTextArea.hidden = true;
   }
 });
-
-var reslackYaml = localStorage.getItem('reslackPlan');
-if (reslackYaml) {
-  migrationProfileTextArea.value = reslackYaml;
-  loadMigrationPlan(reslackYaml);
-}
 
 var syncAddress = localStorage.getItem('dreamcopterSyncAddress');
 if (syncAddress) {
@@ -597,5 +562,21 @@ reslackedDb.getChannelDayStatusMap().then(function(statusMap){
 });
 // TODO: update ready statuses in UI on save
 
-saveButton.addEventListener('click', saveIncompleteDay);
-anotherButton.addEventListener('click', saveReadyDay);
+saveIntermediateButton.addEventListener('click', saveIncompleteDay);
+saveFinishedButton.addEventListener('click', saveReadyDay);
+
+var planPromise = reslackedDb.getMigrationPlan().then(function(yamlSrc) {
+  dreamPlanTextArea.value = yamlSrc;
+  loadMigrationPlan(yamlSrc);
+}).then(reslackedDb.getSlackMaps).then(migrationProfile.loadSlackMaps);
+
+var listPromise = reslackedDb.getChannelDates()
+  .then(function initDaysList(channelDates) {
+  // TODO: clear existing list contents
+  for (var i = 0; i < channelDates.length; i++) {
+    elDaysList.appendChild(
+      createDayListItem.apply(null, channelDates[i].split('/')));
+  }
+});
+
+Promise.all([planPromise, listPromise]).then(openFirstNonReadyDay);
